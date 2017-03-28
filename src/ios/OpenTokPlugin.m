@@ -1,8 +1,8 @@
 //
 //  OpentokPlugin.m
 //
-//  PP-Direct  
-//  hugo.troche@ppfa.org 
+//  PP-Direct
+//  hugo.troche@ppfa.org
 //
 
 #import "OpentokPlugin.h"
@@ -54,6 +54,9 @@
     streamDictionary = [[NSMutableDictionary alloc] init];
     connectionDictionary = [[NSMutableDictionary alloc] init];
     
+    NSLog(@"iOS connecting to sessions");
+    NSString* tbToken = @"T1==cGFydG5lcl9pZD00NTgwODM2MiZzaWc9ODkyYjA0MGMwMzU5YWJmODQxNjgyYzE0Zjc3ZmJkODU2YmY5YzhkNzpzZXNzaW9uX2lkPTJfTVg0ME5UZ3dPRE0yTW41LU1UUTVNRGN6TkRjMk56Z3pOMzVSYzJWMWNFcEpTa0ZwUlROdlJVVmpLMWt5UWxSV1JubC1mZyZjcmVhdGVfdGltZT0xNDkwNzM0ODEyJm5vbmNlPTAuODYzNTA0ODI5NTI4Mzcmcm9sZT1wdWJsaXNoZXImZXhwaXJlX3RpbWU9MTQ5MzMyNjgxMg==";
+    [_session connectWithToken:tbToken error:nil];
     // Return Result
     CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
     [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
@@ -64,6 +67,10 @@
     NSLog(@"iOS creating Publisher");
     BOOL bpubAudio = YES;
     BOOL bpubVideo = YES;
+    
+    subscriberDictionary = [[NSMutableDictionary alloc] init];
+    streamDictionary = [[NSMutableDictionary alloc] init];
+    connectionDictionary = [[NSMutableDictionary alloc] init];
     
     // Get Parameters
     NSString* name = [command.arguments objectAtIndex:0];
@@ -95,6 +102,24 @@
     if ([cameraPosition isEqualToString:@"back"]) {
         _publisher.cameraPosition = AVCaptureDevicePositionBack;
     }
+    
+    NSString* apiKey = @"45808362";
+    NSString* sessionId = @"2_MX40NTgwODM2Mn5-MTQ5MDczNDc2NzgzN35Rc2V1cEpJSkFpRTNvRUVjK1kyQlRWRnl-fg";
+    
+    
+    // Create Session
+    _session = [[OTSession alloc] initWithApiKey: apiKey sessionId:sessionId delegate:self];
+    
+    // Initialize Dictionary, contains DOM info for every stream
+    subscriberDictionary = [[NSMutableDictionary alloc] init];
+    streamDictionary = [[NSMutableDictionary alloc] init];
+    connectionDictionary = [[NSMutableDictionary alloc] init];
+    
+    NSLog(@"iOS connecting to sessions");
+    NSString* tbToken = @"T1==cGFydG5lcl9pZD00NTgwODM2MiZzaWc9ODkyYjA0MGMwMzU5YWJmODQxNjgyYzE0Zjc3ZmJkODU2YmY5YzhkNzpzZXNzaW9uX2lkPTJfTVg0ME5UZ3dPRE0yTW41LU1UUTVNRGN6TkRjMk56Z3pOMzVSYzJWMWNFcEpTa0ZwUlROdlJVVmpLMWt5UWxSV1JubC1mZyZjcmVhdGVfdGltZT0xNDkwNzM0ODEyJm5vbmNlPTAuODYzNTA0ODI5NTI4Mzcmcm9sZT1wdWJsaXNoZXImZXhwaXJlX3RpbWU9MTQ5MzMyNjgxMg==";
+    [_session connectWithToken:tbToken error:nil];
+    
+    
     
     // Return to Javascript
     CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
@@ -243,6 +268,41 @@
     [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
 }
 
+- (void)subscribe {
+    NSLog(@"iOS subscribing to stream");
+    
+    // Get Parameters
+    NSString* sid = @"2_MX40NTgwODM2Mn5-MTQ5MDczNDc2NzgzN35Rc2V1cEpJSkFpRTNvRUVjK1kyQlRWRnl-fg";
+    
+    
+    int top = 200;
+    int left = 0;
+    int width = 200;
+    int height = 200;
+    int zIndex = 0;
+    
+    // Acquire Stream, then create a subscriber object and put it into dictionary
+    OTStream* myStream = [streamDictionary objectForKey:sid];
+    myStream = [[streamDictionary allValues] firstObject];
+    OTSubscriber* sub = [[OTSubscriber alloc] initWithStream:myStream delegate:self];
+    [_session subscribe:sub error:nil];
+    [sub setSubscribeToAudio: YES];
+    [sub setSubscribeToVideo: YES];
+    
+    [subscriberDictionary setObject:sub forKey:myStream.streamId];
+    
+    [sub.view setFrame:CGRectMake(left, top, width, height)];
+    if (zIndex>0) {
+        sub.view.layer.zPosition = zIndex;
+    }
+    [self.webView.superview addSubview:sub.view];
+    
+}
+
+- (void) publish {
+    [_session publish:_publisher error:nil];
+}
+
 // Called by session.unsubscribe(streamId, top, left)
 - (void)unsubscribe:(CDVInvokedUrlCommand*)command{
     NSLog(@"iOS unSubscribing to stream");
@@ -326,6 +386,7 @@
     //    NSString* sessionConnectCallback = [callbackList objectForKey:@"sessSessionConnected"];
     //    [self.commandDelegate sendPluginResult:pluginResult callbackId:sessionConnectCallback];
     
+    [self publish];
     
     [self triggerJSEvent: @"sessionEvents" withType: @"sessionConnected" withData: eventData];
 }
@@ -351,6 +412,7 @@
 - (void)session:(OTSession*)mySession streamCreated:(OTStream*)stream{
     NSLog(@"iOS Received Stream");
     [streamDictionary setObject:stream forKey:stream.streamId];
+    [self subscribe];
     [self triggerStreamCreated: stream withEventType: @"sessionEvents"];
 }
 - (void)session:(OTSession*)session streamDestroyed:(OTStream *)stream{
