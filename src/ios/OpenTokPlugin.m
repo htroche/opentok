@@ -281,7 +281,7 @@
     myStream = [[streamDictionary allValues] firstObject];
     OTSubscriber* sub = [[OTSubscriber alloc] initWithStream:myStream delegate:self];
     [_session subscribe:sub error:nil];
-    [sub setSubscribeToAudio: NO];
+    [sub setSubscribeToAudio: YES];
     [sub setSubscribeToVideo: YES];
     
     [subscriberDictionary setObject:sub forKey:myStream.streamId];
