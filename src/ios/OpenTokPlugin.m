@@ -15,6 +15,15 @@
     NSMutableDictionary *connectionDictionary;
     NSMutableDictionary *streamDictionary;
     NSMutableDictionary *callbackList;
+    NSString* tbToken;
+    NSString* apiKey;
+    NSString* sessionId;
+    int top;
+    int left;
+    int width;
+    int height;
+    int zIndex;
+    
 }
 
 @synthesize exceptionId;
@@ -55,7 +64,7 @@
     connectionDictionary = [[NSMutableDictionary alloc] init];
     
     NSLog(@"iOS connecting to sessions");
-    NSString* tbToken = @"T1==cGFydG5lcl9pZD00NTgwODM2MiZzaWc9ODkyYjA0MGMwMzU5YWJmODQxNjgyYzE0Zjc3ZmJkODU2YmY5YzhkNzpzZXNzaW9uX2lkPTJfTVg0ME5UZ3dPRE0yTW41LU1UUTVNRGN6TkRjMk56Z3pOMzVSYzJWMWNFcEpTa0ZwUlROdlJVVmpLMWt5UWxSV1JubC1mZyZjcmVhdGVfdGltZT0xNDkwNzM0ODEyJm5vbmNlPTAuODYzNTA0ODI5NTI4Mzcmcm9sZT1wdWJsaXNoZXImZXhwaXJlX3RpbWU9MTQ5MzMyNjgxMg==";
+    tbToken = @"T1==cGFydG5lcl9pZD00NTgwODM2MiZzaWc9ODkyYjA0MGMwMzU5YWJmODQxNjgyYzE0Zjc3ZmJkODU2YmY5YzhkNzpzZXNzaW9uX2lkPTJfTVg0ME5UZ3dPRE0yTW41LU1UUTVNRGN6TkRjMk56Z3pOMzVSYzJWMWNFcEpTa0ZwUlROdlJVVmpLMWt5UWxSV1JubC1mZyZjcmVhdGVfdGltZT0xNDkwNzM0ODEyJm5vbmNlPTAuODYzNTA0ODI5NTI4Mzcmcm9sZT1wdWJsaXNoZXImZXhwaXJlX3RpbWU9MTQ5MzMyNjgxMg==";
     [_session connectWithToken:tbToken error:nil];
     // Return Result
     CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
@@ -74,37 +83,33 @@
     
     // Get Parameters
     NSString* name = [command.arguments objectAtIndex:0];
-    int top = [[command.arguments objectAtIndex:1] intValue];
-    int left = [[command.arguments objectAtIndex:2] intValue];
-    int width = [[command.arguments objectAtIndex:3] intValue];
-    int height = [[command.arguments objectAtIndex:4] intValue];
-    int zIndex = [[command.arguments objectAtIndex:5] intValue];
     
-    NSString* publishAudio = [command.arguments objectAtIndex:6];
-    if ([publishAudio isEqualToString:@"false"]) {
-        bpubAudio = NO;
-    }
-    NSString* publishVideo = [command.arguments objectAtIndex:7];
-    if ([publishVideo isEqualToString:@"false"]) {
-        bpubVideo = NO;
-    }
+    /*apiKey = @"45808362";
+     sessionId = @"2_MX40NTgwODM2Mn5-MTQ5MDczNDc2NzgzN35Rc2V1cEpJSkFpRTNvRUVjK1kyQlRWRnl-fg";
+     tbToken = @"T1==cGFydG5lcl9pZD00NTgwODM2MiZzaWc9ODkyYjA0MGMwMzU5YWJmODQxNjgyYzE0Zjc3ZmJkODU2YmY5YzhkNzpzZXNzaW9uX2lkPTJfTVg0ME5UZ3dPRE0yTW41LU1UUTVNRGN6TkRjMk56Z3pOMzVSYzJWMWNFcEpTa0ZwUlROdlJVVmpLMWt5UWxSV1JubC1mZyZjcmVhdGVfdGltZT0xNDkwNzM0ODEyJm5vbmNlPTAuODYzNTA0ODI5NTI4Mzcmcm9sZT1wdWJsaXNoZXImZXhwaXJlX3RpbWU9MTQ5MzMyNjgxMg==";*/
+    
+    apiKey = [command.arguments objectAtIndex:0];
+    sessionId = [command.arguments objectAtIndex:1];
+    tbToken = [command.arguments objectAtIndex:2];
+    top = [[command.arguments objectAtIndex:3] intValue];
+    left = [[command.arguments objectAtIndex:4] intValue];
+    width = [[command.arguments objectAtIndex:5] intValue];
+    height = [[command.arguments objectAtIndex:6] intValue];
+    zIndex = [[command.arguments objectAtIndex:7] intValue];
+    
+    
     
     // Publish and set View
     _publisher = [[OTPublisher alloc] initWithDelegate:self name:name];
-    [_publisher setPublishAudio:bpubAudio];
-    [_publisher setPublishVideo:bpubVideo];
+    [_publisher setPublishAudio:YES];
+    [_publisher setPublishVideo:YES];
     [self.webView.superview addSubview:_publisher.view];
     [_publisher.view setFrame:CGRectMake(left, top, width, height)];
     if (zIndex>0) {
         _publisher.view.layer.zPosition = zIndex;
     }
-    NSString* cameraPosition = [command.arguments objectAtIndex:8];
-    if ([cameraPosition isEqualToString:@"back"]) {
-        _publisher.cameraPosition = AVCaptureDevicePositionBack;
-    }
+    _publisher.cameraPosition = AVCaptureDevicePositionFront;
     
-    NSString* apiKey = @"45808362";
-    NSString* sessionId = @"2_MX40NTgwODM2Mn5-MTQ5MDczNDc2NzgzN35Rc2V1cEpJSkFpRTNvRUVjK1kyQlRWRnl-fg";
     
     
     // Create Session
@@ -116,7 +121,7 @@
     connectionDictionary = [[NSMutableDictionary alloc] init];
     
     NSLog(@"iOS connecting to sessions");
-    NSString* tbToken = @"T1==cGFydG5lcl9pZD00NTgwODM2MiZzaWc9ODkyYjA0MGMwMzU5YWJmODQxNjgyYzE0Zjc3ZmJkODU2YmY5YzhkNzpzZXNzaW9uX2lkPTJfTVg0ME5UZ3dPRE0yTW41LU1UUTVNRGN6TkRjMk56Z3pOMzVSYzJWMWNFcEpTa0ZwUlROdlJVVmpLMWt5UWxSV1JubC1mZyZjcmVhdGVfdGltZT0xNDkwNzM0ODEyJm5vbmNlPTAuODYzNTA0ODI5NTI4Mzcmcm9sZT1wdWJsaXNoZXImZXhwaXJlX3RpbWU9MTQ5MzMyNjgxMg==";
+    
     [_session connectWithToken:tbToken error:nil];
     
     
@@ -129,11 +134,7 @@
 - (void)updateView:(CDVInvokedUrlCommand*)command{
     NSString* callback = command.callbackId;
     NSString* sid = [command.arguments objectAtIndex:0];
-    int top = [[command.arguments objectAtIndex:1] intValue];
-    int left = [[command.arguments objectAtIndex:2] intValue];
-    int width = [[command.arguments objectAtIndex:3] intValue];
-    int height = [[command.arguments objectAtIndex:4] intValue];
-    int zIndex = [[command.arguments objectAtIndex:5] intValue];
+    
     if ([sid isEqualToString:@"TBPublisher"]) {
         NSLog(@"The Width is: %d", width);
         _publisher.view.frame = CGRectMake(left, top, width, height);
@@ -275,23 +276,17 @@
     NSString* sid = @"2_MX40NTgwODM2Mn5-MTQ5MDczNDc2NzgzN35Rc2V1cEpJSkFpRTNvRUVjK1kyQlRWRnl-fg";
     
     
-    int top = 200;
-    int left = 0;
-    int width = 200;
-    int height = 200;
-    int zIndex = 0;
-    
     // Acquire Stream, then create a subscriber object and put it into dictionary
     OTStream* myStream = [streamDictionary objectForKey:sid];
     myStream = [[streamDictionary allValues] firstObject];
     OTSubscriber* sub = [[OTSubscriber alloc] initWithStream:myStream delegate:self];
     [_session subscribe:sub error:nil];
-    [sub setSubscribeToAudio: YES];
+    [sub setSubscribeToAudio: NO];
     [sub setSubscribeToVideo: YES];
     
     [subscriberDictionary setObject:sub forKey:myStream.streamId];
     
-    [sub.view setFrame:CGRectMake(left, top, width, height)];
+    [sub.view setFrame:CGRectMake(left, height, width, height)];
     if (zIndex>0) {
         sub.view.layer.zPosition = zIndex;
     }
