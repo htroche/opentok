@@ -24,6 +24,22 @@ on: function(event, handler) {
 setLogLevel: function(a) {
     return console.log("Log Level Set");
 },
+toggleCamera: function(cameraPosition) {
+    Cordova.exec(TBSuccess, TBError, OTPlugin, "setCameraPosition", [cameraPosition]);
+    return this;
+},
+muteAudio: function(mute) {
+    Cordova.exec(TBSuccess, TBError, OTPlugin, "publishAudio", [mute]);
+    return this;
+},
+muteVideo: function(mute) {
+    Cordova.exec(TBSuccess, TBError, OTPlugin, "publishVideo", [mute]);
+    return this;
+},
+endCall: function() {
+    Cordova.exec(TBSuccess, TBError, OTPlugin, "disconnect", []);
+    return this;
+},
 upgradeSystemRequirements: function() {
     return {};
 },
