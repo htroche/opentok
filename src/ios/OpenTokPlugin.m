@@ -200,6 +200,15 @@
     [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
 }
 
+- (void) destroySubPub:(CDVInvokedUrlCommand*)command {
+    [self destroyPublisher:command];
+    
+    OTSubscriber * subscriber = [[subscriberDictionary allValues] firstObject];
+    [_session unsubscribe:subscriber error:nil];
+    [subscriber.view removeFromSuperview];
+    [subscriberDictionary removeAllObjects];
+}
+
 
 #pragma mark Session Methods
 - (void)connect:(CDVInvokedUrlCommand *)command{

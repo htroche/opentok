@@ -46,6 +46,10 @@ upgradeSystemRequirements: function() {
 updateViews: function() {
     return TBUpdateObjects();
 },
+destroyViews: function() {
+    Cordova.exec(TBSuccess, TBError, OTPlugin, "destroySubPub", []);
+    return this;
+},
 getHelper: function() {
     if (typeof jasmine === "undefined" || !jasmine || !jasmine['getEnv']) {
         window.jasmine = {
