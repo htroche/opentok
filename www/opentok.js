@@ -328,10 +328,10 @@ TBPublisher = (function() {
                height = DefaultHeight;
                }
                this.pubElement = document.getElementById(this.domId);
-               replaceWithVideoStream(this.domId, PublisherStreamId, {
+               /*replaceWithVideoStream(this.domId, PublisherStreamId, {
                                       width: width,
                                       height: height
-                                      });
+                                      });*/
                position = getPosition(this.domId);
                TBUpdateObjects();
                OT.getHelper().eventing(this);
