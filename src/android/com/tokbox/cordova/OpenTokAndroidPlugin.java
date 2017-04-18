@@ -106,12 +106,10 @@ PublisherKit.PublisherListener, Session.StreamPropertiesListener{
         @Override
         public void run() {
             try{
-                Log.i( TAG, "updating view in ui runnable" + mProperty.toString() );
-                Log.i( TAG, "updating view in ui runnable " + mView.toString() );
                 
                 
                 if(isSubscriber)
-                    mView.setY(top*2);
+                    mView.setY(top+height);
                 else
                     mView.setY(top);
                 mView.setX( left );
@@ -153,10 +151,18 @@ PublisherKit.PublisherListener, Session.StreamPropertiesListener{
         
         
         public void destroyPublisher(){
-            ViewGroup parent = (ViewGroup) cordova.getActivity().findViewById(android.R.id.content);
-            parent.removeView( this.mView );
-            this.mPublisher.destroy();
-            this.mPublisher = null;
+            cordova.getActivity().runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    ViewGroup parent = (ViewGroup) cordova.getActivity().findViewById(android.R.id.content);
+                    parent.removeView( mView );
+                    if(mPublisher != null) {
+                        mPublisher.destroy();
+                        mPublisher = null;
+                    }
+                }
+            });
+            
         }
         
         public void run() {
@@ -170,9 +176,9 @@ PublisherKit.PublisherListener, Session.StreamPropertiesListener{
                 mPublisher.setPublisherListener(this);
                 try{
                     
-                    mPublisher.setPublishVideo(false); // default is true
+                    mPublisher.setPublishVideo(true); // default is true
                     
-                    mPublisher.setPublishAudio(false); // default is true
+                    mPublisher.setPublishAudio(true); // default is true
                     
                 }catch( Exception e ){
                     Log.i(TAG, "error when trying to retrieve publish audio/video property");
@@ -180,7 +186,7 @@ PublisherKit.PublisherListener, Session.StreamPropertiesListener{
                 this.mView = mPublisher.getView();
                 frame.addView( this.mView );
                 mSession = new Session(cordova.getActivity().getApplicationContext(), apiKey ,sessionId );
-                mSession.publish(mPublisher);
+                //mSession.publish(mPublisher);
                 mSession.setSessionListener(thisPlugin);
                 mSession.setConnectionListener(thisPlugin);
                 mSession.setSignalListener(thisPlugin);
@@ -200,14 +206,7 @@ PublisherKit.PublisherListener, Session.StreamPropertiesListener{
         @Override
         public void onStreamCreated(PublisherKit arg0, Stream arg1) {
             Log.i(TAG, "publisher stream received");
-            try{
-                if( compareStrings(this.mProperty.getString(8), "back") ){
-                    Log.i(TAG, "swapping camera");
-                    mPublisher.swapCamera(); // default is front
-                }
-            }catch(Exception e){
-                Log.i(TAG, "error when trying to retrieve cameraName property");
-            }
+            
             streamCollection.put(arg1.getStreamId(), arg1);
             triggerStreamCreated( arg1, "publisherEvents");
         }
@@ -506,16 +505,17 @@ PublisherKit.PublisherListener, Session.StreamPropertiesListener{
         connectionCollection.put(mSession.getConnection().getConnectionId(), mSession.getConnection());
         publish();
         JSONObject data = new JSONObject();
-        try{
-            data.put("status", "connected");
-            JSONObject connection = createDataFromConnection( mSession.getConnection() );
-            data.put("connection", connection);
-        }catch (JSONException e) {}
-        triggerJSEvent( "sessionEvents", "sessionConnected", data);
+        /*try{
+         data.put("status", "connected");
+         JSONObject connection = createDataFromConnection( mSession.getConnection() );
+         data.put("connection", connection);
+         }catch (JSONException e) {}
+         triggerJSEvent( "sessionEvents", "sessionConnected", data);*/
     }
     
     private void publish() {
-        myPublisher.startPublishing();
+        mSession.publish(myPublisher.mPublisher);
+        //myPublisher.startPublishing();
     }
     
     RunnableSubscriber mySubscriber;
@@ -573,6 +573,8 @@ PublisherKit.PublisherListener, Session.StreamPropertiesListener{
     @Override
     public void onStreamReceived(Session arg0, Stream arg1) {
         Log.i(TAG, "stream received");
+        
+        subscribe(arg1);
         streamCollection.put(arg1.getStreamId(), arg1);
         triggerStreamCreated( arg1, "sessionEvents");
     }
