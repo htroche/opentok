@@ -403,7 +403,10 @@ PublisherKit.PublisherListener, Session.StreamPropertiesListener{
             mSession.setStreamPropertiesListener(this);
             
             // publisher methods
-        }else if( action.equals( "setCameraPosition")){
+        } else if( action.equals( "endCall" )){
+            mSession.disconnect();
+        }
+        else if( action.equals( "setCameraPosition")){
             String cameraId = args.getString(0);
             if(myPublisher.mPublisher != null) {
                 if (cameraId.equals("front")) {
